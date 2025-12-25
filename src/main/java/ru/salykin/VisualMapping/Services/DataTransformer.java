@@ -31,32 +31,24 @@ public class DataTransformer {
      */
     public String transformData(String sourceDataJson, SchemaDTO instruction) {
         try {
-            // 1. Парсим исходные данные
             JsonNode sourceData = objectMapper.readTree(sourceDataJson);
 
-            // 2. Создаем целевую структуру
             ObjectNode targetData = objectMapper.createObjectNode();
 
-            // 3. Выполняем все маппинги (простое копирование значений)
             for (MappingDTO mapping : instruction.getMappings()) {
                 try {
-                    // Извлекаем значение из исходных данных
                     Object sourceValue = extractValueFromPath(sourceData, mapping.getSourceField());
 
-                    // Вставляем значение в целевую структуру (без преобразований)
                     insertValueToPath(targetData, mapping.getTargetField(), sourceValue);
 
                 } catch (PathNotFoundException e) {
-                    // Поле не найдено в исходных данных - пропускаем этот маппинг
                     System.err.println("Поле не найдено: " + mapping.getSourceField());
                 } catch (Exception e) {
-                    // Логируем другие ошибки, но продолжаем обработку остальных маппингов
                     System.err.println("Ошибка при обработке маппинга " + mapping.getSourceField() +
                             " -> " + mapping.getTargetField() + ": " + e.getMessage());
                 }
             }
 
-            // 4. Возвращаем результат в виде JSON-строки
             return objectMapper.writeValueAsString(targetData);
 
         } catch (Exception e) {
@@ -75,7 +67,6 @@ public class DataTransformer {
             Configuration conf = Configuration.defaultConfiguration();
             Object value = JsonPath.using(conf).parse(jsonString).read(jsonPath);
 
-            // Обработка массивов - берем первый элемент, если это массив
             if (value instanceof net.minidev.json.JSONArray) {
                 net.minidev.json.JSONArray array = (net.minidev.json.JSONArray) value;
                 if (!array.isEmpty()) {
@@ -87,7 +78,7 @@ public class DataTransformer {
             return convertJsonPathValue(value);
 
         } catch (PathNotFoundException e) {
-            throw e; // Пробрасываем исключение для обработки на верхнем уровне
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при извлечении значения по пути: " + path, e);
         }
@@ -101,14 +92,12 @@ public class DataTransformer {
             return null;
         }
 
-        // Возвращаем примитивные типы как есть
         if (value instanceof String ||
                 value instanceof Number ||
                 value instanceof Boolean) {
             return value;
         }
 
-        // Для сложных объектов возвращаем строковое представление
         try {
             return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
@@ -125,10 +114,10 @@ public class DataTransformer {
         }
 
         if (path.startsWith("$")) {
-            return path; // Уже в формате JsonPath
+            return path;
         }
 
-        return "$." + path; // Добавляем корневой элемент
+        return "$." + path;
     }
 
     /**
@@ -138,19 +127,16 @@ public class DataTransformer {
         try {
             String jsonPath = convertToJsonPath(path);
 
-            // Обработка корневого пути
             if (jsonPath.equals("$")) {
                 targetData.put("value", value != null ? value.toString() : "null");
                 return;
             }
 
-            // Убираем "$." из начала пути
             String relativePath = jsonPath.substring(2);
             String[] pathParts = relativePath.split("\\.");
 
             JsonNode currentNode = targetData;
 
-            // Создаем вложенную структуру до последнего элемента пути
             for (int i = 0; i < pathParts.length - 1; i++) {
                 String part = pathParts[i];
 
@@ -161,7 +147,6 @@ public class DataTransformer {
                 currentNode = currentNode.get(part);
             }
 
-            // Вставляем значение в последний элемент пути
             String finalField = pathParts[pathParts.length - 1];
             insertSimpleValue((ObjectNode) currentNode, finalField, value);
 
@@ -189,7 +174,6 @@ public class DataTransformer {
         } else if (value instanceof Boolean) {
             node.put(fieldName, (Boolean) value);
         } else {
-            // Для сложных объектов сохраняем как строку
             node.put(fieldName, value.toString());
         }
     }
@@ -206,7 +190,6 @@ public class DataTransformer {
             SourceSchema sourceSchema = new SourceSchema();
             TargetSchema targetSchema = new TargetSchema();
 
-            // Определяем исходную и целевую схемы
             for (DataTypeCatalog catalog : structures) {
                 if (catalog.getName().contains("source") ||
                         catalog.getName().equals(structures.get(0).getName())) {
@@ -221,14 +204,12 @@ public class DataTransformer {
             instruction.setSourceSchema(sourceSchema);
             instruction.setTargetSchema(targetSchema);
 
-            // Получаем маппинги из базы
             List<MappingDTO> mappings = objectMapper.readValue(
                     mappingCatalog.getMappings(),
                     new TypeReference<List<MappingDTO>>() {}
             );
             instruction.setMappings(mappings);
 
-            // Выполняем маппинг
             return transformData(sourceDataJson, instruction);
 
         } catch (Exception e) {
