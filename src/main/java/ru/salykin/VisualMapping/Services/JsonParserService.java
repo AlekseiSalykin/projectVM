@@ -63,7 +63,7 @@ public class JsonParserService {
         return schemaDTO;
     }
 
-    public List<SchemaDTO> loadAllMappings() {
-
-    }
+//    public List<SchemaDTO> loadAllMappings() {
+//
+//    }
 }
