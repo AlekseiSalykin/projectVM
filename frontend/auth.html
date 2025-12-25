@@ -3,53 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth</title>
+    <title>Авторизация</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            border-bottom: 2px solid #333;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .auth-container {
+            background-color: #fff;
+            border: 2px solid #333;
+            border-radius: 5px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #333;
+            border-radius: 3px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 3px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            background-color: grey;
+        }
+        
+        .submit-btn:active {
+            background-color: #222;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+            background-color: #fff;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid white;
+            border-radius: 50%;
+            border-top-color: #333;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 500px) {
+            .auth-container {
+                padding: 30px 20px;
+            }
+            
+            .header {
+                padding: 15px 20px;
+            }
+        }
+        
+        .back-btn {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: 1px solid #333;
+            background-color: #fff;
+            border-radius: 3px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover {
+            background-color: #f0f0f0;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Авторизация</h1>
-    <form id="login">
-        <label for="username">Имя пользователя:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Пароль:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Вход</button>
-    </form>
-</body>
-<script>
-    document.getElementById('login').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            console.log(JSON.stringify({username, password}));
+    <div class="header">
+        <h1>Авторизация</h1>
+    </div>
 
-            try {
-                const response = await fetch('http://localhost:8080/auth', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
+    <div class="main-content">
+        <div class="auth-container">
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required 
+                        placeholder="Введите имя пользователя"
+                        autocomplete="username"
+                    >
+                    <div class="error-message" id="usernameError"></div>
+                </div>
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    // Сохраняем токен
-                    localStorage.setItem('token', data.token);
-                    // Переходим на главную страницу
-                    window.location.href = 'http://localhost:5500/index.html';
-                } else {
-                    alert('Login failed!');
-                }
-            } catch (error) {
-                console.error('Error:', error);
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Введите пароль"
+                        autocomplete="current-password"
+                    >
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">Войти</span>
+                    <span id="btnLoading" style="display: none;">
+                        <span class="loading"></span>Вход...
+                    </span>
+                </button>
+            </form>
+            
+            <div class="error-message" id="formError" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Система маппинга данных. Все права защищены.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+            const formError = document.getElementById('formError');
+            const usernameError = document.getElementById('usernameError');
+            const passwordError = document.getElementById('passwordError');
+            
+            localStorage.removeItem('jwtToken');
+
+            const token = localStorage.getItem('jwtToken');
+            if (token) {
+                window.location.href = 'index.html';
             }
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Сброс сообщений об ошибках
+                resetErrors();
+                
+                // Получаем значения полей
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                // Базовая валидация
+                let isValid = true;
+                
+                if (!username) {
+                    showError(usernameError, 'Введите имя пользователя');
+                    isValid = false;
+                }
+                
+                if (!password) {
+                    showError(passwordError, 'Введите пароль');
+                    isValid = false;
+                }
+                
+                if (!isValid) return;
+                
+                setLoading(true);
+                
+                try {
+                    const response = await fetch('http://localhost:8080/auth', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const token = data.token;
+                        
+                        localStorage.setItem('jwtToken', token);
+                        console.log('Токен сохранен');
+                        
+                        window.location.href = 'index.html';
+                        
+                    } else if (response.status === 401) {
+                        showError(formError, 'Неверное имя пользователя или пароль');
+                    } else {
+                        showError(formError, `Ошибка сервера: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError(formError, 'Ошибка сети. Проверьте подключение к серверу.');
+                } finally {
+                    setLoading(false);
+                }
+            });
+            
+            function resetErrors() {
+                usernameError.style.display = 'none';
+                passwordError.style.display = 'none';
+                formError.style.display = 'none';
+            }
+            
+            function showError(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+            
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    submitBtn.disabled = true;
+                    btnText.style.display = 'none';
+                    btnLoading.style.display = 'inline';
+                } else {
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoading.style.display = 'none';
+                }
+            }
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !submitBtn.disabled) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
         });
-</script>
+    </script>
+</body>
 </html>

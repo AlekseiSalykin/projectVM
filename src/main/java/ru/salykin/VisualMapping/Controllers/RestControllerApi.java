@@ -2,12 +2,12 @@ package ru.salykin.VisualMapping.Controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.salykin.VisualMapping.DTO.SchemaDTO;
-import ru.salykin.VisualMapping.DTO.Token;
-import ru.salykin.VisualMapping.DTO.UserDTO;
 import ru.salykin.VisualMapping.Services.DataTransformer;
-import ru.salykin.VisualMapping.Utils.JsonParserService;
+import ru.salykin.VisualMapping.Services.JsonParserService;
 
 @RestController
 @RequestMapping("/apimapping")
@@ -24,17 +24,29 @@ public class RestControllerApi {
     }
 
     @GetMapping
-    public HttpStatus testMethod(@RequestHeader("api-key") String key) {
-        if (key.equals("123")) {
+    public HttpStatus loadMapping() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+
+
             return HttpStatus.OK;
+        } catch (Exception e) {
+            return HttpStatus.BAD_REQUEST;
         }
-        return HttpStatus.UNAUTHORIZED;
     }
 
     @PostMapping
-    public HttpStatus testPostRequest(@RequestBody String body) {
+    public HttpStatus saveMapping(@RequestBody String body) {
         try {
-            System.out.println(body);
+            System.out.println("Received data: " + body);
+
+            // Получаем пользователя из SecurityContext
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            System.out.println("User: " + username + " is saving mapping");
+
             schemaDTO = jsonParserService.parseAndSave(body);
             return HttpStatus.OK;
         } catch (Exception e) {
@@ -44,8 +56,18 @@ public class RestControllerApi {
 
     @PostMapping("/process")
     public ResponseEntity<String> processMapping(@RequestBody String body) {
-        String result = dataTransformer.transformData(body, schemaDTO);
+        try {
+            String result = dataTransformer.transformData(body, schemaDTO);
 
-        return ResponseEntity.ok(result);
+            // Получаем пользователя
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            System.out.println("User: " + username + " processed mapping");
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error processing: " + e.getMessage());
+        }
     }
 }

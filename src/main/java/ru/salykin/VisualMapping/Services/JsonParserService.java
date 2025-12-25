@@ -1,4 +1,4 @@
-package ru.salykin.VisualMapping.Utils;
+package ru.salykin.VisualMapping.Services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,10 +8,8 @@ import ru.salykin.VisualMapping.Models.DataTypeCatalog;
 import ru.salykin.VisualMapping.Models.MappingCatalog;
 import ru.salykin.VisualMapping.Repositories.DataTypeCatalogRepository;
 import ru.salykin.VisualMapping.Repositories.MappingCatalogRepository;
-import ru.salykin.VisualMapping.Services.DataTransformer;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @Service
 public class JsonParserService {
@@ -62,27 +60,10 @@ public class JsonParserService {
 
         System.out.println("Successfully saved all entities!");
 
-//        // Добавляем кастомное преобразование для splitFIO
-//        dataTransformer.addTransformer("", value -> {
-//            if (value instanceof String) {
-//                String fio = (String) value;
-//                String[] parts = fio.split("\\s+");
-//                Map<String, String> result = new HashMap<>();
-//
-//                // Возвращаем разные части ФИО в зависимости от того, какое поле нужно
-//                if (parts.length >= 1) {
-//                    result.put("last_name", parts[0]);
-//                }
-//                if (parts.length >= 2) {
-//                    result.put("first_name", parts[1]);
-//                }
-//                if (parts.length >= 3) {
-//                    result.put("middle_name", parts[2]);
-//                }
-//                return result;
-//            }
-//            return value;
-//        });
         return schemaDTO;
+    }
+
+    public List<SchemaDTO> loadAllMappings() {
+
     }
 }

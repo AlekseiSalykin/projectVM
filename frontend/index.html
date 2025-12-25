@@ -288,6 +288,15 @@
             font-size: 12px;
             min-width: 24px;
         }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -296,6 +305,7 @@
         <div class="controls">
             <button id="saveBtn" class="save-mapping">Сохранить инструкцию</button>
             <button id="loadBtn" class="open-mapping">Открыть инструкцию</button>
+            <button id="exit" class="exit">Выход</button>
         </div>
     </div>
 
@@ -363,7 +373,12 @@
         </div>
     </div>
 
+    <div class="footer">
+        <p>© 2025 Система маппинга данных. Все права защищены.</p>
+    </div>
+
     <script>
+
         function updateMappingsList() {
             const mappingsList = document.getElementById('mappingsList');
             mappingsList.innerHTML = '';
@@ -418,7 +433,17 @@
         const sourceStructure = { name: '', fields: [] };
         const targetStructure = { name: '', fields: [] };
 
+        let token;
+
         document.addEventListener('DOMContentLoaded', function() {
+            token = localStorage.getItem('jwtToken');
+            const currentPath = window.location.pathname;
+            
+            if (!token) {
+                console.error('Токен не найден. Перенаправление на страницу авторизации.');
+                window.location.href = 'http://localhost:5500/auth.html';
+                return;
+            }
             
             document.querySelectorAll('.add-strct').forEach( btn => {
                 btn.addEventListener('click', function() {
@@ -467,9 +492,8 @@
             });
 
             document.getElementById('saveBtn').addEventListener('click', saveMapping);
-            document.getElementById('loadBtn').addEventListener('click', function() {
-                alert('Функция загрузки инструкции будет реализована позже');
-            });     
+            document.getElementById('loadBtn').addEventListener('click', loadMapping);
+            document.getElementById('exit').addEventListener('click', exit);         
         });
         
         function createStructure(container, name) {
@@ -784,10 +808,14 @@
             };
             
             try {
+                // const token = localStorage.getItem('jwtToken');
+                console.log('Используемый токен:', token);
+
                 const response = await fetch('http://localhost:8080/apimapping', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(mappingJson)
                 });
@@ -802,6 +830,37 @@
             } catch (error) {
                 console.error('Ошибка при сохранении:', error);
                 alert('Ошибка при сохранении инструкции: ' + error.message);
+            }
+        }
+
+        async function loadMapping() {
+            try {
+                const response = await fetch('http://localhost:8080/apimapping/loadListMapping', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const mappingData = await response.json();
+                    alert('Инструкция успешно загружена с сервера!');
+                    console.log('Загруженные данные:', mappingData);
+                    
+                    // Здесь можно добавить логику для отображения загруженных данных в интерфейсе
+                } else {
+                    throw new Error(`Ошибка сервера: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке:', error);
+                alert('Ошибка при загрузке инструкции: ' + error.message);
+            }
+        }
+
+        function exit() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                localStorage.removeItem('jwtToken');
+                window.location.href = 'http://localhost:5500/auth.html';
             }
         }
 
