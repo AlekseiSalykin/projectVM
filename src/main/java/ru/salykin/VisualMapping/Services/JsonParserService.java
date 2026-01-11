@@ -47,12 +47,14 @@ public class JsonParserService {
         sourceCatalog.setName(schemaDTO.getSourceSchema().getName());
         sourceCatalog.setSchema(mapper.writeValueAsString(schemaDTO.getSourceSchema()));
         sourceCatalog.setMappingCatalog(savedMappingCatalog);
+        sourceCatalog.setSource(true);
         System.out.println(sourceCatalog);
 
         DataTypeCatalog targetCatalog = new DataTypeCatalog();
         targetCatalog.setName(schemaDTO.getTargetSchema().getName());
         targetCatalog.setSchema(mapper.writeValueAsString(schemaDTO.getTargetSchema()));
         targetCatalog.setMappingCatalog(savedMappingCatalog);
+        targetCatalog.setSource(false);
         System.out.println(targetCatalog);
 
         DataTypeCatalog savedSourceCatalog = dataTypeCatalogRepository.save(sourceCatalog);

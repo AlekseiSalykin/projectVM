@@ -25,6 +25,9 @@ public class DataTypeCatalog {
     )
     private MappingCatalog mappingCatalog;
 
+    @Column(name = "dt_source")
+    private boolean source;
+
     // Геттеры и сеттеры для mappingCatalog
     public MappingCatalog getMappingCatalog() {
         return mappingCatalog;
@@ -66,13 +69,22 @@ public class DataTypeCatalog {
         this.schema = schema;
     }
 
+    public boolean isSource() {
+        return source;
+    }
+
+    public void setSource(boolean source) {
+        this.source = source;
+    }
+
     @Override
     public String toString() {
         return "DataTypeCatalog{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", schema='" + schema + '\'' +
-                ", instructionId=" + getInstructionId() +
+                ", mappingCatalog=" + mappingCatalog +
+                ", source=" + source +
                 '}';
     }
 }

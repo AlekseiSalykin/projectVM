@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Mapping</title>
+    <title>Маппинг данных</title>
     <style>
         * {
             box-sizing: border-box;
@@ -54,18 +54,20 @@
         
         .main {
             display: flex;
-            gap: 20px;
+            gap: 100px;
             height: 70vh;
             width: 100%;
+            position: relative;
         }
         
         .source-container {
             border: 2px solid #333;
-            width: 40%;
+            width: 45%;
             background-color: #fff;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .source-header {
@@ -77,30 +79,14 @@
             background-color: #f8f9fa;
         }
         
-        .mapping-container {
-            border: 2px solid #333;
-            width: 20%;
-            background-color: #fff;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        .mapping-container h2 {
-            padding: 15px;
-            margin: 0;
-            border-bottom: 1px solid #ccc;
-            background-color: #f8f9fa;
-            text-align: center;
-        }
-        
         .target-container {
             border: 2px solid #333;
-            width: 40%;
+            width: 45%;
             background-color: #fff;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .target-header {
@@ -110,6 +96,17 @@
             padding: 15px;
             border-bottom: 1px solid #ccc;
             background-color: #f8f9fa;
+        }
+        
+        /* Область для стрелок */
+        .arrows-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
         }
         
         .modal {
@@ -149,71 +146,11 @@
             padding: 5px;
             margin: 2px 0;
             cursor: pointer;
-        }
-        
-        .tree-node.selected {
-            background-color: #e8e8e8;
-            border-left: 3px solid #333;
-        }
-        
-        .mapping-item {
-            padding: 10px;
-            margin: 5px 8px;
-            border: 1px solid #ccc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #fff;
-            border-radius: 3px;
             transition: background-color 0.2s;
         }
         
-        .mapping-item:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .mapping-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin-right: 10px;
-        }
-        
-        .mapping-source, .mapping-target {
-            font-size: 12px;
-            font-family: monospace;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #333;
-        }
-        
-        .mapping-arrow {
-            text-align: center;
-            font-size: 12px;
-            margin: 2px 0;
-            color: #666;
-        }
-        
-        .delete-mapping-btn {
-            flex-shrink: 0;
-            width: 24px;
-            height: 24px;
-            border: none;
-            background-color: transparent;
-            color: #333;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            transition: color 0.2s;
-        }
-        
-        .delete-mapping-btn:hover {
-            color: #ff0000;
+        .tree-node.selected {
+            background-color: #95959572;
         }
         
         .node-content {
@@ -227,24 +164,6 @@
             flex: 1;
             overflow: auto;
             padding: 10px;
-        }
-        
-        .mapping {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
-        
-        .no-mappings {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #888;
-            font-size: 14px;
-            text-align: center;
-            padding: 40px 20px;
         }
         
         input, select {
@@ -283,7 +202,7 @@
             font-size: 11px;
         }
         
-        .add-field-btn, .delete-btn {
+        .add-field-btn, .delete-btn, .delete-structure {
             padding: 4px 8px;
             font-size: 12px;
             min-width: 24px;
@@ -296,6 +215,37 @@
             font-size: 14px;
             border-top: 1px solid #eaeaea;
             background-color: #fff;
+            margin-top: 20px;
+        }
+        
+        .arrow-group {
+            cursor: pointer;
+            transition: opacity 0.2s;
+            pointer-events: auto !important;
+        }
+        
+        .arrow-group:hover {
+            opacity: 0.8;
+        }
+        
+        .arrow-path {
+            fill: none;
+            stroke: #000;
+            stroke-width: 2;
+        }
+        
+        .arrow-head {
+            fill: #000;
+        }
+        
+        .arrow-group:hover .arrow-path {
+            stroke: #FF5722 !important;
+            stroke-width: 3 !important;
+            filter: drop-shadow(0 0 2px rgba(255, 87, 34, 0.5));
+        }
+        
+        .arrow-group:hover .arrow-head {
+            fill: #FF5722 !important;
         }
     </style>
 </head>
@@ -310,20 +260,16 @@
     </div>
 
     <div class="main">
-        <!-- Область создания исходной стуктуры -->
+        <!-- Контейнер для стрелок -->
+        <svg class="arrows-container" id="arrowsCanvas"></svg>
+        
+        <!-- Область создания исходной структуры -->
         <div class="source-container">
             <div class="source-header">
                 <h2>Исходящая структура</h2>
                 <button class="add-strct" data-container="Source" id="createSource">Создать структуру</button>
             </div>
-            <div class="tree-container" id="treeSource">
-            </div>
-        </div>
-
-        <div class="mapping-container">
-            <h2>Маппинг</h2>
-            <div class="mapping" id="mappingsList">
-            </div>
+            <div class="tree-container" id="treeSource"></div>
         </div>
 
         <!-- Область создания целевой структуры -->
@@ -332,8 +278,7 @@
                 <h2>Целевая структура</h2>
                 <button class="add-strct" data-container="Target" id="createTarget">Создать структуру</button>
             </div>
-            <div class="tree-container" id="treeTarget">
-            </div>
+            <div class="tree-container" id="treeTarget"></div>
         </div>
     </div>
 
@@ -378,53 +323,6 @@
     </div>
 
     <script>
-
-        function updateMappingsList() {
-            const mappingsList = document.getElementById('mappingsList');
-            mappingsList.innerHTML = '';
-            
-            if (mappings.length === 0) {
-                const emptyState = document.createElement('div');
-                emptyState.className = 'no-mappings';
-                emptyState.innerHTML = `
-                    <div>📋</div>
-                    <div>Нет созданных сопоставлений</div>
-                    <div style="font-size: 12px; margin-top: 10px;">
-                        Выберите поле в исходной структуре,<br>затем поле в целевой
-                    </div>
-                `;
-                mappingsList.appendChild(emptyState);
-                return;
-            }
-            
-            mappings.forEach((mapping, index) => {
-                const mappingItem = document.createElement('div');
-                mappingItem.className = 'mapping-item';
-                
-                mappingItem.innerHTML = `
-                    <div class="mapping-content">
-                        <div class="mapping-source" title="${mapping.source}">
-                            ${truncateText(mapping.source, 25)}
-                        </div>
-                        <div class="mapping-arrow">→</div>
-                        <div class="mapping-target" title="${mapping.target}">
-                            ${truncateText(mapping.target, 25)}
-                        </div>
-                    </div>
-                    <button class="delete-mapping-btn" onclick="deleteMapping(${index})" title="Удалить сопоставление">
-                        🗑️
-                    </button>
-                `;
-                
-                mappingsList.appendChild(mappingItem);
-            });
-        }
-        
-        function truncateText(text, maxLength) {
-            if (text.length <= maxLength) return text;
-            return text.substring(0, maxLength - 3) + '...';
-        }
-        
         let currentContainer = null;
         let selectedNode = null;
         let lastSelectedNode = null;
@@ -444,6 +342,7 @@
                 window.location.href = 'http://localhost:5500/auth.html';
                 return;
             }
+            console.log("Токен: ", token);
             
             document.querySelectorAll('.add-strct').forEach( btn => {
                 btn.addEventListener('click', function() {
@@ -463,14 +362,12 @@
                     document.getElementById('structureModal').style.display = 'none';
                     document.getElementById('structureName').value = '';
                 } else {
-                    alert('Введите имя структуры');
+                    alert('Введите имя структуры!');
+                    return;
                 }
-                if (currentContainer === 'Source')
-                {
+                if (currentContainer === 'Source') {
                     document.getElementById('createSource').style.display = 'none';
-                }
-                else
-                {
+                } else {
                     document.getElementById('createTarget').style.display = 'none';
                 }
             });
@@ -493,7 +390,7 @@
 
             document.getElementById('saveBtn').addEventListener('click', saveMapping);
             document.getElementById('loadBtn').addEventListener('click', loadMapping);
-            document.getElementById('exit').addEventListener('click', exit);         
+            document.getElementById('exit').addEventListener('click', exit);
         });
         
         function createStructure(container, name) {
@@ -511,10 +408,10 @@
                 <div class="node-structure">
                     <span>${name}</span>
                     <button class="add-field-btn">Добавить поле</button>
+                    <button class="delete-structure">Удалить</button>
                 </div>
                 <div class="node-children"></div>
             `;
-
 
             treeContainer.appendChild(structureNode);
             
@@ -534,6 +431,12 @@
                 selectedNode = structureNode;
                 document.getElementById('fieldModal').style.display = 'block';
                 document.getElementById('fieldName').focus();
+            });
+
+            const deleteStructureBtn = structureNode.querySelector('.delete-structure');
+            deleteStructureBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteStructure(container, name, treeContainer, structureNode);
             });
 
             structureNode.addEventListener('click', function(e) {
@@ -596,10 +499,12 @@
 
             fieldNode.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (!e.target.classList.contains('add-field-btn')) {
+                if (!e.target.classList.contains('add-field-btn') && !e.target.classList.contains('delete-btn')) {
                     handleNodeSelection(this);
                 }
             });
+            
+            updateFieldMappedStatus(fieldNode);
         }
 
         function addFieldToStructure(structure, parentNode, field) {
@@ -628,6 +533,32 @@
             return null;
         }
 
+        function deleteStructure(container, name, treeContainer, structureNode) {
+            if (!confirm(`Удалить структуру "${name}" и все ее поля?`)) {
+                return;
+            }
+            
+            if (container === 'Source') {
+                sourceStructure.name = '';
+                sourceStructure.fields = [];
+                document.getElementById('createSource').style.display = 'block';
+            } else {
+                targetStructure.name = '';
+                targetStructure.fields = [];
+                document.getElementById('createTarget').style.display = 'block';
+            }
+
+            mappings = mappings.filter(mapping => {
+                return !mapping.source.startsWith(name + '.') && 
+                    !mapping.target.startsWith(name + '.');
+            });
+
+            treeContainer.innerHTML = '';
+
+            updateFieldMappedStatusAll();
+            drawArrows();
+        }
+
         function deleteField(node) {
             const container = node.getAttribute('data-container');
             const path = node.getAttribute('data-path');
@@ -648,6 +579,8 @@
             removeMappingsByPath(path);
             
             console.log(`Поле ${path} удалено`);
+            
+            drawArrows();
         }
 
         function removeFieldFromStructure(structure, path) {
@@ -686,7 +619,7 @@
             });
             
             if (mappings.length !== initialLength) {
-                updateMappingsList();
+                updateFieldMappedStatusAll();
             }
         }
 
@@ -698,12 +631,12 @@
             const sourceType = sourceNode.getAttribute('data-type');
             const targetType = targetNode.getAttribute('data-type');
             
-            if (sourceType === 'object' || sourceType === 'structure') {
+            if (sourceType === 'object' || sourceType === 'structure' || sourceType === 'array') {
                 alert('Нельзя создать маппинг для объекта, массива или структуры. Выберите конкретное поле.');
                 return;
             }
             
-            if (targetType === 'object' || targetType === 'structure') {
+            if (targetType === 'object' || targetType === 'structure' || targetType === 'array') {
                 alert('Нельзя создать маппинг для объекта, массива или структуры. Выберите конкретное поле.');
                 return;
             }
@@ -722,18 +655,24 @@
             };
             mappings.push(mapping);
             
-            updateMappingsList();
-
             sourceNode.classList.remove('selected');
             targetNode.classList.remove('selected');
+            
+            updateFieldMappedStatus(sourceNode);
+            updateFieldMappedStatus(targetNode);
+            
+            drawArrows();
             
             console.log('Создан маппинг:', mapping);
         }
 
         function deleteMapping(index) {
             if (confirm('Удалить этот маппинг?')) {
+                const mapping = mappings[index];
                 mappings.splice(index, 1);
-                updateMappingsList();
+                
+                updateFieldMappedStatusAll();
+                drawArrows();
             }
         }
 
@@ -744,10 +683,14 @@
             document.querySelectorAll(`.tree-node.selected`).forEach(n => {
                 n.classList.remove('selected');
             });
+
+            if (nodeType === 'structure') {
+                return;
+            }
             
             node.classList.add('selected');
 
-            if (nodeType === 'object' || nodeType === 'array' || nodeType === 'structure') {
+            if (nodeType === 'object' || nodeType === 'array') {
                 selectedNode = node;
                 lastSelectedNode = null;
                 console.log('Выбран узел для добавления полей:', node.getAttribute('data-path'));
@@ -767,6 +710,28 @@
                 console.log('Заменен источник для маппинга:', node.getAttribute('data-path'));
                 lastSelectedNode = node;
             }
+        }
+
+        function updateFieldMappedStatus(node) {
+            const path = node.getAttribute('data-path');
+            const container = node.getAttribute('data-container');
+            
+            node.classList.remove('mapped');
+            
+            const isMapped = mappings.some(m => 
+                (container === 'Source' && m.source === path) ||
+                (container === 'Target' && m.target === path)
+            );
+            
+            if (isMapped) {
+                node.classList.add('mapped');
+            }
+        }
+        
+        function updateFieldMappedStatusAll() {
+            document.querySelectorAll('.tree-node').forEach(node => {
+                updateFieldMappedStatus(node);
+            });
         }
 
         function generateMappingJson() {
@@ -792,6 +757,87 @@
             return mappingJson;
         }
 
+        function drawArrows() {
+            const svg = document.getElementById('arrowsCanvas');
+            svg.innerHTML = '';
+            
+            const mainRect = document.querySelector('.main').getBoundingClientRect();
+            
+            mappings.forEach((mapping, index) => {
+                const sourceNode = document.querySelector(`.tree-node[data-container="Source"][data-path="${mapping.source}"]`);
+                const targetNode = document.querySelector(`.tree-node[data-container="Target"][data-path="${mapping.target}"]`);
+                
+                if (!sourceNode || !targetNode) return;
+                
+                const sourceRect = sourceNode.getBoundingClientRect();
+                const targetRect = targetNode.getBoundingClientRect();
+                
+                const x1 = sourceRect.right - mainRect.left;
+                const y1 = sourceRect.top + sourceRect.height / 2 - mainRect.top;
+                
+                const x2 = targetRect.left - mainRect.left;
+                const y2 = targetRect.top + targetRect.height / 2 - mainRect.top;
+                
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'arrow-group');
+                group.setAttribute('data-mapping-index', index);
+                
+                const controlX1 = x1 + (x2 - x1) * 0.3;
+                const controlX2 = x2 - (x2 - x1) * 0.3;
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = `M ${x1} ${y1} C ${controlX1} ${y1}, ${controlX2} ${y2}, ${x2} ${y2}`;
+                path.setAttribute('d', d);
+                path.setAttribute('class', 'arrow-path');
+                path.setAttribute('stroke', '#4CAF50');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                
+                const headSize = 8;
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                const headX = x2 - headSize * Math.cos(angle);
+                const headY = y2 - headSize * Math.sin(angle);
+                
+                const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                head.setAttribute('class', 'arrow-head');
+                head.setAttribute('points', 
+                    `${x2},${y2} ` +
+                    `${headX - headSize * Math.cos(angle - Math.PI/6)},${headY - headSize * Math.sin(angle - Math.PI/6)} ` +
+                    `${headX - headSize * Math.cos(angle + Math.PI/6)},${headY - headSize * Math.sin(angle + Math.PI/6)}`
+                );
+                
+                const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                hitArea.setAttribute('d', d);
+                hitArea.setAttribute('stroke', 'transparent');
+                hitArea.setAttribute('stroke-width', '20');
+                hitArea.setAttribute('fill', 'none');
+                hitArea.style.cursor = 'pointer';
+                hitArea.style.pointerEvents = 'auto';
+                
+                group.appendChild(path);
+                group.appendChild(head);
+                group.appendChild(hitArea);
+                svg.appendChild(group);
+                
+                hitArea.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteMapping(index);
+                });
+                
+                hitArea.addEventListener('mouseenter', (e) => {
+                    path.setAttribute('stroke', '#FF5722');
+                    path.setAttribute('stroke-width', '3');
+                    head.setAttribute('fill', '#FF5722');
+                });
+                
+                hitArea.addEventListener('mouseleave', () => {
+                    path.setAttribute('stroke', '#000');
+                    path.setAttribute('stroke-width', '2');
+                    head.setAttribute('fill', '#000');
+                });
+            });
+        }
+
         async function saveMapping() {
             const mappingJson = generateMappingJson();
             
@@ -801,16 +847,7 @@
             
             console.log('Сгенерированный JSON:', mappingJson);
 
-            const dataToSend = {
-                mapping: mappingJson,
-                sourceStructure: sourceStructure,
-                targetStructure: targetStructure
-            };
-            
             try {
-                // const token = localStorage.getItem('jwtToken');
-                console.log('Используемый токен:', token);
-
                 const response = await fetch('http://localhost:8080/apimapping', {
                     method: 'POST',
                     headers: {
@@ -841,20 +878,269 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
-                if (response.ok) {
-                    const mappingData = await response.json();
-                    alert('Инструкция успешно загружена с сервера!');
-                    console.log('Загруженные данные:', mappingData);
-                    
-                    // Здесь можно добавить логику для отображения загруженных данных в интерфейсе
-                } else {
+
+                if (!response.ok) {
                     throw new Error(`Ошибка сервера: ${response.status}`);
                 }
+                
+                const mappingList = await response.json();
+                
+                if (!Array.isArray(mappingList) || mappingList.length === 0) {
+                    alert('Нет сохраненных маппингов.');
+                    return;
+                }
+                
+                console.log('Получены маппинги:', mappingList);
+                showMappingListModal(mappingList);
             } catch (error) {
                 console.error('Ошибка при загрузке:', error);
                 alert('Ошибка при загрузке инструкции: ' + error.message);
             }
+        }
+
+        // Функция загрузки выбранного маппинга
+        async function loadSelectedMapping(mappingId) {
+            try {
+                console.log('Загрузка маппинга с ID:', mappingId);
+                
+                const response = await fetch(`http://localhost:8080/apimapping/${mappingId}/combined`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка сервера: ${response.status}`);
+                }
+                
+                const mappingData = await response.json();
+                console.log('Получен маппинг:', mappingData);
+                
+                // Восстанавливаем маппинг
+                restoreMapping(mappingData);
+                
+                // Закрываем модальное окно
+                const modal = document.getElementById('loadMappingModal');
+                if (modal) {
+                    document.body.removeChild(modal);
+                }
+                
+                alert('Маппинг успешно загружен!');
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке маппинга:', error);
+                alert('Ошибка при загрузке маппинга: ' + error.message);
+            }
+        }
+
+        // Функция восстановления маппинга (упрощенная)
+        function restoreMapping(mappingData) {
+            try {
+                const mappingObj = JSON.parse(mappingData.mappings);
+                
+                resetStructures();
+                
+                // Восстанавливаем source структуру
+                if (mappingObj.sourceSchema && mappingObj.sourceSchema.name) {
+                    createStructure('Source', mappingObj.sourceSchema.name);
+                    
+                    if (mappingObj.sourceSchema.fields && mappingObj.sourceSchema.fields.length > 0) {
+                        const sourceNode = document.querySelector('#treeSource .tree-node[data-type="structure"]');
+                        if (sourceNode) {
+                            createFieldsFromData(sourceNode, mappingObj.sourceSchema.fields);
+                        }
+                    }
+                }
+                
+                // Восстанавливаем target структуру
+                if (mappingObj.targetSchema && mappingObj.targetSchema.name) {
+                    createStructure('Target', mappingObj.targetSchema.name);
+                    
+                    if (mappingObj.targetSchema.fields && mappingObj.targetSchema.fields.length > 0) {
+                        const targetNode = document.querySelector('#treeTarget .tree-node[data-type="structure"]');
+                        if (targetNode) {
+                            createFieldsFromData(targetNode, mappingObj.targetSchema.fields);
+                        }
+                    }
+                }
+                
+                // Восстанавливаем маппинги
+                if (mappingObj.mappings && Array.isArray(mappingObj.mappings)) {
+                    mappingObj.mappings.forEach(mapping => {
+                        const sourcePath = mapping.sourceField;
+                        const targetPath = mapping.targetField;
+                        
+                        const sourceNode = document.querySelector(`.tree-node[data-container="Source"][data-path="${sourcePath}"]`);
+                        const targetNode = document.querySelector(`.tree-node[data-container="Target"][data-path="${targetPath}"]`);
+                        
+                        if (sourceNode && targetNode) {
+                            const newMapping = {
+                                source: sourcePath,
+                                target: targetPath,
+                                sourceName: sourceNode.getAttribute('data-name'),
+                                targetName: targetNode.getAttribute('data-name')
+                            };
+                            
+                            const existingMapping = mappings.find(m => 
+                                m.source === newMapping.source && m.target === newMapping.target
+                            );
+                            
+                            if (!existingMapping) {
+                                mappings.push(newMapping);
+                                updateFieldMappedStatus(sourceNode);
+                                updateFieldMappedStatus(targetNode);
+                            }
+                        }
+                    });
+                }
+                
+                drawArrows();
+                
+                console.log('Маппинг восстановлен');
+                
+            } catch (error) {
+                console.error('Ошибка при восстановлении маппинга:', error);
+                alert('Ошибка при восстановлении маппинга: ' + error.message);
+            }
+        }
+
+        function createFieldsFromData(parentNode, fields) {
+            fields.forEach(fieldData => {
+                createField(parentNode, fieldData.name, fieldData.type);
+                
+                // Находим только что созданный узел
+                const parentPath = parentNode.getAttribute('data-path');
+                const fieldPath = parentPath + '.' + fieldData.name;
+                const fieldNode = document.querySelector(`.tree-node[data-container="${parentNode.getAttribute('data-container')}"][data-path="${fieldPath}"]`);
+                
+                // Рекурсивно создаем дочерние поля
+                if (fieldData.children && fieldData.children.length > 0 && fieldNode) {
+                    createFieldsFromData(fieldNode, fieldData.children);
+                }
+            });
+        }
+
+        // Функция сброса структур
+        function resetStructures() {
+            document.getElementById('treeSource').innerHTML = '';
+            document.getElementById('treeTarget').innerHTML = '';
+            
+            sourceStructure.name = '';
+            sourceStructure.fields = [];
+            targetStructure.name = '';
+            targetStructure.fields = [];
+            
+            document.getElementById('createSource').style.display = 'block';
+            document.getElementById('createTarget').style.display = 'block';
+            
+            mappings = [];
+            
+            const svg = document.getElementById('arrowsCanvas');
+            svg.innerHTML = '';
+        }
+
+        // Функция для отображения списка маппингов
+        function showMappingListModal(mappingList) {
+            const modal = document.createElement('div');
+            modal.id = 'loadMappingModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                border: 2px solid #333;
+                border-radius: 5px;
+                padding: 20px;
+                z-index: 1001;
+                min-width: 600px;
+                max-height: 80vh;
+                overflow: auto;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            `;
+
+            modal.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #333;">Выберите маппинг для загрузки</h3>
+                    <button id="closeLoadModal" style="
+                        padding: 5px 10px;
+                        cursor: pointer;
+                        border: none;
+                        background: transparent;
+                        font-size: 18px;
+                        color: #666;
+                    ">✖</button>
+                </div>
+                <div id="mappingListContainer"></div>
+            `;
+            
+            document.body.appendChild(modal);
+            displayMappingList(mappingList);
+    
+            // Обработчики
+            document.getElementById('closeLoadModal').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
+
+        // Функция отображения списка
+        function displayMappingList(mappingList) {
+            const container = document.querySelector('#mappingListContainer');
+            
+            if (mappingList.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">Нет сохраненных маппингов.</p>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.style.cssText = `
+                width: 100%;
+                border-collapse: collapse;
+            `;
+            
+            table.innerHTML = `
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: left;">ID</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: left;">Название</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: left;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${mappingList.map((item, index) => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; vertical-align: top;">${item.id || index + 1}</td>
+                            <td style="padding: 12px; vertical-align: top;">
+                                <strong>${item.name || `Маппинг #${item.id}`}</strong>
+                            </td>
+                            <td style="padding: 12px; vertical-align: top;">
+                                <button onclick="loadSelectedMapping(${item.id})" style="
+                                    padding: 6px 12px;
+                                    margin-right: 5px;
+                                    cursor: pointer;
+                                    border-radius: 3px;
+                                    border-bottom: 2px solid #333;
+                                ">Загрузить</button>
+                                <button onclick="deleteSavedMapping(${item.id})" style="
+                                    padding: 6px 12px;
+                                    border-radius: 3px;
+                                    cursor: pointer;
+                                    border-bottom: 2px solid #333;
+                                ">Удалить</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            container.appendChild(table);
         }
 
         function exit() {
@@ -864,9 +1150,29 @@
             }
         }
 
+        // Обработчики для перерисовки стрелок
+        window.addEventListener('resize', debounce(drawArrows, 100));
+        
+        const treeContainers = document.querySelectorAll('.tree-container');
+        treeContainers.forEach(container => {
+            container.addEventListener('scroll', debounce(drawArrows, 50));
+        });
+        
+        // Функция debounce для оптимизации
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         window.deleteMapping = deleteMapping;
         window.deleteField = deleteField;
-        window.truncateText = truncateText;
     </script>
 </body>
 </html>
