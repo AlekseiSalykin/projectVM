@@ -208,6 +208,12 @@
             min-width: 24px;
         }
 
+        .container-btn-fields {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
         .footer {
             text-align: center;
             padding: 20px;
@@ -465,8 +471,10 @@
             fieldNode.innerHTML = `
                 <div class="node-content">
                     <span>${name} <small>(${type})</small></span>
-                    ${canHaveChildren ? '<button class="add-field-btn">+</button>' : ''}
-                    <button class="delete-btn">-</button>
+                    <div class="container-btn-fields">
+                        ${canHaveChildren ? '<button class="add-field-btn">+</button>' : ''}
+                        <button class="delete-btn">-</button>
+                    </div>
                 </div>
                 ${canHaveChildren ? '<div class="node-children"></div>' : ''}
             `;
