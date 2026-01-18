@@ -9,6 +9,7 @@ import ru.salykin.VisualMapping.Models.MappingCatalog;
 import ru.salykin.VisualMapping.Repositories.DataTypeCatalogRepository;
 import ru.salykin.VisualMapping.Repositories.MappingCatalogRepository;
 
+import java.io.*;
 import java.util.List;
 
 @Service
@@ -61,6 +62,14 @@ public class JsonParserService {
         DataTypeCatalog savedTargetCatalog = dataTypeCatalogRepository.save(targetCatalog);
 
         System.out.println("Successfully saved all entities!");
+
+
+
+            try {
+                mapper.writeValue(new File("/Users/macbook/IdeaProjects/VisualMapping/instructions/test.json"), schemaDTO);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
         return schemaDTO;
     }

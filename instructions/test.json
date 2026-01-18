@@ -1,0 +1,1 @@
+{"sourceSchema":{"name":"user","fields":[{"name":"name","type":"string","path":"user.name","children":[]}]},"targetSchema":{"name":"client","fields":[{"name":"name","type":"string","path":"client.name","children":[]}]},"mappings":[{"sourceField":"user.name","targetField":"client.name","transformation":""}]}
